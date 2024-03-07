@@ -165,7 +165,7 @@ for iSub = 1:numSub
         
         %identify the elevated signal (indication of white square in left screen
         %corner)
-        highs = abs(b.photodiode)>80000
+        highs = abs(b)>80000
         
         
         %identify exact time points of photodiode signal going up (trigger
@@ -182,7 +182,8 @@ for iSub = 1:numSub
                 lst_off = [lst_off,i-1]
             end
         end
-        
+
+        %{
         %generate list of latency of triggers as stored in you EEG.event struct)
         lats={EEG.event.latency}
         lats_ms =[cellfun(@(x) (x/200)*1000, lats)]
@@ -229,7 +230,7 @@ for iSub = 1:numSub
         %(representing the missing triggers)
         EEG.event = event_new
         %the EEG.event struct should now align with trigger labels.
-        
+        %}
 
         %% Back to Pulvinar Code
         % Identify the inflection points of the photodiode channel to find event
