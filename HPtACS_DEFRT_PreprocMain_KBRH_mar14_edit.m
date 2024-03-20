@@ -22,19 +22,6 @@ runManualICA_Rejection = 0; % If 0, then skip. If 1, then do it.
 
 %% Set up environment
 %% Set up environment
-% Get the full path of the currently executing script
-currentScriptFullPath = mfilename('fullpath');
-
-% Extract the directory part of the path (removing the file name)
-[currentScriptDir, ~, ~] = fileparts(currentScriptFullPath);
-
-% Assuming your desired root directory is up a few levels or in a specific
-% relative path from the current script directory, adjust the path accordingly.
-% For example, if the root directory is two levels up:
-%% Defining Variables
-runManualICA_Rejection = 0; % If 0, then skip. If 1, then do it.
-
-%% Set up environment
 ROOT = 'Y:/Study Folders/DEFRT EEG/';
 rawEEG_dir = [ROOT 'DEFRT_Raw_EEG/'];
 if exist(rawEEG_dir,'dir')~=7
@@ -62,7 +49,6 @@ eeglab; close all;
 
 
 
-
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %%%%%%%%%%%%%% DEFRT PREPROCESSING PIPELINE %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %%%%%%%%%%%%%%%%%%%%% DEEFRT TASK %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -77,7 +63,7 @@ newSrate = 200; % sampling rate for downsampled data
 % Create subject list, 49 removed bc already processed. 50 removed
 % because issue w/ data
 SUBJECTS = {...
-    ['63']};
+    ['67']};
 numSub = length(SUBJECTS);
 
 %% For Loop for Data
@@ -201,13 +187,13 @@ for iSub = 1:numSub
         pdCheckEvts = logical([ISIs<1010 0]); % ISIs less than ~500 ms are from the pre-task event check routines
         breakEvts = [ISIs>8500 0];           % ISIs greater than ~9 seconds are taken as inter-block periods
         DFRT_EEG.pdevent = DFRT_EEG.pdevent(onsetEvts & ~(pdCheckEvts | breakEvts));  % Keep task-relevant events
-        keepers = find(onsetEvts & ~(pdCheckEvts | breakEvts))  
         
+        keepers = find(onsetEvts & ~(pdCheckEvts | breakEvts))  
         latencies = [DFRT_EEG.pdevent.latency] 
-        keeperLatencies = latencies(keepers) 
-        Plot events kept: 
+        %keeperLatencies = latencies(keepers) 
+        plot(keepers) 
             x = zeros(1,latencies(end)); 
-            x(keeperLatencies) = 1; 
+            x(latencies) = 1; 
             plot(x) 
             ylim([-0.1 1.1]) 
 print([SUB_PROC_EEG '/' rootFilename '_revisedeventParse.png'],'-dpng')
