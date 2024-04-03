@@ -21,7 +21,8 @@
 clear;      % Clears workspace
 clc;        % Clears the command window.
 %close all;  % Closes all open figures.
-dbstop in HPtACS_DEFRT_PreprocMain_RH_apr3_2024.m at 447 %breakpoint on executable code
+dbclear('HPtACS_DEFRT_PreprocMain_RH_apr3_2024.m');
+dbstop in HPtACS_DEFRT_PreprocMain_RH_apr3_2024.m at 485 %breakpoint on executable code
 
 %% Defining Variables
 runManualICA_Rejection = 0; % If 0, then skip. If 1, then do it.
@@ -126,7 +127,7 @@ newSrate = 200; % sampling rate for downsampled data
 % Create subject list, 49 removed bc already processed. 50 removed
 % because issue w/ data
 SUBJECTS = {...
-    '63'};
+    '63', '69', '75'};
 numSub = length(SUBJECTS);
 
 % numMissingSub 1 by 2 matrix
@@ -135,6 +136,43 @@ numSub = length(SUBJECTS);
 PROBLEM_DATA = {
     '63', {'MISSING_Block2_Trial2_Trigger3', 'MISSING_Block3_Trial16_Trigger3', 'MISSING_Block6_Trial6_Trigger3', 'EXTRA_Block6_Trial21_Trigger1', 'EXTRA_Block6_Trial21_Trigger2'}
 };
+
+% Initialize an array of participant IDs with all missing triggers
+participantIDs = {'69', '75'};
+
+% Initialize PROBLEM_DATA to hold data for all participants
+PROBLEM_DATA_DIN = {};
+
+% Loop over each participant ID
+for pIdx = 1:length(participantIDs)
+    % Initialize the list for the current participant with no DIN events
+    participantID = participantIDs{pIdx};
+    problemDataTrials = {};
+    
+    % Iterate through each block, trial, and trigger
+    for block = 1:6
+        for trial = 1:20
+            for trigger = 1:3
+                % Construct the string for the current combination
+                trialString = sprintf('MISSING_Block%d_Trial%d_Trigger%d', block, trial, trigger);
+                
+                % Add the string to the list
+                problemDataTrials{end + 1} = trialString;
+            end
+        end
+    end
+    
+    % Combine the participant ID with the list of trials
+    PROBLEM_DATA_DIN{pIdx, 1} = participantID;
+    PROBLEM_DATA_DIN{pIdx, 2} = problemDataTrials;
+end
+
+for pIdx = 1:size(PROBLEM_DATA_DIN, 1)
+    % Append each participant and their data to PROBLEM_DATA
+    PROBLEM_DATA{end + 1, 1} = PROBLEM_DATA_DIN{pIdx, 1}; % Participant ID
+    PROBLEM_DATA{end, 2} = PROBLEM_DATA_DIN{pIdx, 2}; % Trials data
+end
+
 problem_SUB = PROBLEM_DATA(:,1);
 
 %% For Loop for Data
