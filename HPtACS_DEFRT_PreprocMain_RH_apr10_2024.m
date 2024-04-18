@@ -127,18 +127,18 @@ newSrate = 200; % sampling rate for downsampled data
 % Create subject list, 49 removed bc already processed. 50 removed
 % because issue w/ data
 SUBJECTS = {...
-    '63', '69', '75'};
+    '67'};
 numSub = length(SUBJECTS);
 
 % numMissingSub 1 by 2 matrix
 % First column is subject ID
 % Second column is a list of the missing triggers IN ORDER
 PROBLEM_DATA = {
-    '63', {'MISSING_Block1_Trial2_Trigger3', 'MISSING_Block2_Trial16_Trigger3', 'MISSING_Block6_Trial6_Trigger3', 'EXTRA_Block6_Trial21_Trigger1', 'EXTRA_Block6_Trial21_Trigger1'}
+    '67', {'EXTRA_Block2_Trial4_Trigger1', 'EXTRA_Block2_Trial21_Trigger1','EXTRA_Block6_Trial21_Trigger1'}
 };
 
 % Initialize an array of participant IDs with all missing triggers
-participantIDs = {'69', '75'};
+participantIDs = {};
 
 % Initialize PROBLEM_DATA to hold data for all participants
 PROBLEM_DATA_DIN = {};
@@ -189,7 +189,7 @@ for iSub = 1:numSub
     end
 
     % Now check if their raw file exists in the raw directory
-    dfrtFileFinder = dir([rawEEG_dir 'DEFRT_' subject '_EEG/' 'DEFRT_' subject '_DEEfRT_*.mff']);
+    dfrtFileFinder = dir([rawEEG_dir 'DEFRT_' subject '_DEEfRT_*.mff']);
     numPrimaryFiles = length(dfrtFileFinder);
 
     % some people have two files: the naming convention is to say "DEEfRT2"
@@ -213,8 +213,8 @@ for iSub = 1:numSub
             
         elseif (numPrimaryFiles==1) && (numSecondFiles == 0)     % One file found (this is the expected behavior)
             
-            % Raw DEfRT file
-            rawDefrtFile = [rawEEG_dir 'DEFRT_' subject '_EEG/' dfrtFileFinder(1).name];
+            % Raw DEfRT file 
+            rawDefrtFile = [rawEEG_dir dfrtFileFinder(1).name];
             % Load the dataset
             DFRT_EEG = mff_import(rawDefrtFile);
             
@@ -350,8 +350,11 @@ for iSub = 1:numSub
                 trialIdx = str2double(trialIdx_str(6:end));
                 triggerIdx_str = problemParts{4};
                 triggerIdx = str2double(triggerIdx_str(8:end));
-
-                numTriggersInPractice = 18;
+                
+                %For 67 only 
+                numTriggersInPractice = 17;
+                %For everyone else
+                %numTriggersInPractice = 18;
                 numTriggersInTrial = 3;
                 numTrials = 20;
                 numTriggersInBlock = 3 * numTrials;
