@@ -22,7 +22,8 @@ clear;      % Clears workspace
 clc;        % Clears the command window.ed 
 %close all;  % Closes all open figures.
 dbclear('HPtACS_DEFRT_PreprocMain_RH_apr24_2024.m');
-dbstop in HPtACS_DEFRT_PreprocMain_RH_apr24_2024.m at 512 %breakpoint on executable code
+%dbstop in HPtACS_DEFRT_PreprocMain_RH_apr24_2024.m at 390 %breakpoint on beginning of executable code
+dbstop in HPtACS_DEFRT_PreprocMain_RH_apr24_2024.m at 452 %breakpoint on ending of executable code
 
 %% Defining Variables
 runManualICA_Rejection = 0; % If 0, then skip. If 1, then do it.
@@ -154,7 +155,7 @@ numSub = length(SUBJECTS);
 % First column is subject ID
 % Second column is a list of the missing triggers IN ORDER
 PROBLEM_DATA = {
-    %'63', {'MISSING_Block1_Trial2_Trigger3', 'MISSING_Block2_Trial16_Trigger3', 'MISSING_Block6_Trial6_Trigger3', 'EXTRA_Block6_Trial21_Trigger1', 'EXTRA_Block6_Trial21_Trigger1'}
+    % '63', {'MISSING_Block1_Trial2_Trigger3', 'MISSING_Block2_Trial16_Trigger3', 'MISSING_Block6_Trial6_Trigger3', 'EXTRA_Block6_Trial21_Trigger1', 'EXTRA_Block6_Trial21_Trigger1'}
 };
 
 % Initialize an array of participant IDs with all missing triggers
@@ -365,7 +366,10 @@ for iSub = 1:numSub
         for i = 1:length(fieldNames)
             defaultValues.(fieldNames{i}) = NaN; % Assuming NaN is an appropriate default value
         end
-        % Assuming pdevent is the event array in DFRT_EEG.pdevent
+
+        newEvents = [];
+        missing_secondTrigger = 4000;
+        missing_thirdTrigger = 5500;
         for block = 1:6
             % Load in the intertrial times for this block
             base = ['Task_data/DEEFRT/DEFRT_sub0' subject '/DEFRT_sub0' subject '_' num2str(block)];
@@ -379,6 +383,9 @@ for iSub = 1:numSub
                         interTrialTimes(i) = trialInfo(i).iti;
                     end
                     for trial = 1:20
+                        lowerBound = -2000;
+                        upperBound = 2000;
+                        missing_firstTrigger = interTrialTimes(trial)*1000 + 3000;
                         for trigger = 1:3
                             foundTrigger = false;
                             % Blocks are each made up of 60 triggers,
@@ -389,22 +396,12 @@ for iSub = 1:numSub
                             % also some removed afterwards as well.
                             problem_eventIdx = ((block - 1) * 60) + ...
                                 ((trial-1) * 3) + ...
-                                trigger + triggersAdded...
-                                - triggersRemoved;
+                                trigger;
                             triggerTime = pdevent(problem_eventIdx).latency;
-                            lowerBound = -1500;
-                            upperBound = 1500;
-                            missing_firstTrigger = interTrialTimes(trial)*1000 + 3000;
-                            % if we are missing the second trigger, then count
-                            % forwards from the first trigger.
-                            missing_secondTrigger = 4000;
-                            % If we are missing the third trigger, then count
-                            % forwards from the second trigger.
-                            missing_thirdTrigger = 5500;
                             % Logic for handling missing triggers (as you've provided)
                             % Check if problem_eventIdx is 0
-                            if problem_eventIdx - 1 == 0
-                                % If so, set previousEvent_time to 0
+                            if problem_eventIdx == 1
+                                % If so, skip
                                 continue;
                             else
                                 % Otherwise, retrieve the time of the previous event normally
@@ -413,44 +410,45 @@ for iSub = 1:numSub
                             if trigger == 1
                                 if triggerTime - previousEvent_time >= lowerBound + missing_firstTrigger && triggerTime - previousEvent_time <= upperBound + missing_firstTrigger
                                     foundTrigger = true;
-                                    break;  % Trigger is within the range, no action needed
+                                    % continue;  % Trigger is within the range, no action needed
                                 else
                                     new_eventTime = previousEvent_time + missing_firstTrigger;
-                                    disp(['This is not between ' num2str(lowerBound + missing_firstTrigger) ' and ' num2str(upperBound + missing_firstTrigger)]);
+                                    disp(['Trigger is not between ' num2str(lowerBound + missing_firstTrigger) ' and ' num2str(upperBound + missing_firstTrigger)]);
                                 end
                             elseif trigger == 2
                                 if triggerTime - previousEvent_time >= lowerBound + missing_secondTrigger && triggerTime - previousEvent_time <= upperBound + missing_secondTrigger
                                     foundTrigger = true;
-                                    break;  % Trigger is within the range, no action needed
+                                    % continue;  % Trigger is within the range, no action needed
                                 else
                                     new_eventTime = previousEvent_time + missing_secondTrigger;
-                                    disp(['This is not between ' num2str(lowerBound + missing_secondTrigger) ' and ' num2str(upperBound + missing_secondTrigger)]);
+                                    disp(['Trigger is not between ' num2str(lowerBound + missing_secondTrigger) ' and ' num2str(upperBound + missing_secondTrigger)]);
                                 end
                             elseif trigger == 3
                                 if triggerTime - previousEvent_time >= lowerBound + missing_thirdTrigger && triggerTime - previousEvent_time <= upperBound + missing_thirdTrigger
                                     foundTrigger = true;
-                                    break;  % Trigger is within the range, no action needed
+                                    % continue;  % Trigger is within the range, no action needed
                                 else
                                     new_eventTime = previousEvent_time + missing_thirdTrigger;
-                                    disp(['This is not between ' num2str(lowerBound + missing_thirdTrigger) ' and ' num2str(upperBound + missing_thirdTrigger)]);
+                                    disp(['Trigger is not between ' num2str(lowerBound + missing_thirdTrigger) ' and ' num2str(upperBound + missing_thirdTrigger)]);
                                 end
                             end
                             disp(['problem_eventIdx is ', num2str(problem_eventIdx)])
                             if ~foundTrigger
-                                disp(['Missing trigger added at Block ', num2str(block), ' Trial ', num2str(trial), ' Trigger ', num2str(trigger) ' IT Time was ' num2str(triggerTime - previousEvent_time)]);
+                                disp(['Missing trigger added at Block ', num2str(block), ' Trial ', num2str(trial), ' Trigger ', num2str(trigger) ' IT Time was ' num2str(triggerTime - previousEvent_time), ' with a previous event time of ', num2str(previousEvent_time), ' and a trigger time of ', num2str(triggerTime)]);
                                 % Creating a new event structure for the new latency
                                 newEvent = defaultValues; % Start with default values for all fields
                                 newEvent.latency = new_eventTime; % Set the calculated latency
+                                newEvents = [newEvents, newEvent];
                                 pdevent = [pdevent(1:problem_eventIdx-1), newEvent, pdevent(problem_eventIdx:end)];
-                                triggersAdded = triggersAdded + 1;
                             end
+                            indicesToRemove = (1:numel(pdevent) > problem_eventIdx) & ([pdevent.latency] < triggerTime);
+                            pdevent(indicesToRemove) = [];pdevent(indicesToRemove) = [];
                         end
                     end
             else
                 disp('No files found matching the pattern.');
             end
         end
-        pdevent;
         eventLatencies = [DFRT_EEG.pdevent.latency];  % extract latencies from the struct array
         
         % create Y data - all ones, same length as eventLatencies
